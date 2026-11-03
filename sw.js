@@ -1,5 +1,5 @@
 // Офлайн-режим: сначала сеть (чтобы обновления приходили сразу), без сети — из кэша
-const CACHE = 'ilya-planner-v2';
+const CACHE = 'ilya-planner-v3';
 const SHELL = [
   './', 'index.html', 'css/styles.css', 'manifest.webmanifest', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',
   'js/app.js', 'js/utils.js', 'js/const.js', 'js/store.js', 'js/ui.js', 'js/agenda.js', 'js/components.js', 'js/forms.js', 'js/demo.js', 'js/theme.js',
@@ -8,7 +8,7 @@ const SHELL = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {
@@ -26,7 +26,7 @@ self.addEventListener('fetch', (e) => {
   }
   if (url.origin !== location.origin) return;
   e.respondWith(
-    fetch(req)
+    fetch(req, { cache: 'no-cache' })
       .then((res) => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); } return res; })
       .catch(() => caches.match(req, { ignoreSearch: true }).then((hit) => hit || caches.match('index.html')))
   );

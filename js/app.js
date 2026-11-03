@@ -62,5 +62,16 @@ render(false);
 
 navigator.storage?.persist?.().catch(() => {});
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  // Новая версия приложения: один раз перезагрузить страницу, чтобы сразу увидеть изменения
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (hadController && !reloaded && !sheetOpen()) { reloaded = true; location.reload(); }
+  });
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+    .then((reg) => {
+      reg.update().catch(() => {});
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+    })
+    .catch(() => {});
 }
