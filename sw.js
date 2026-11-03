@@ -1,5 +1,5 @@
 // Офлайн-режим: сначала сеть (чтобы обновления приходили сразу), без сети — из кэша
-const CACHE = 'ilya-planner-v1';
+const CACHE = 'ilya-planner-v2';
 const SHELL = [
   './', 'index.html', 'css/styles.css', 'manifest.webmanifest', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',
   'js/app.js', 'js/utils.js', 'js/const.js', 'js/store.js', 'js/ui.js', 'js/agenda.js', 'js/components.js', 'js/forms.js', 'js/demo.js', 'js/theme.js',
