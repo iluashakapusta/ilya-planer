@@ -3,6 +3,7 @@ import { esc, today, fmtDayLong, fmtShort, cap, rub, sum, addDays, diffDays, unt
 import { agendaFor, nextEvent, paymentsSoon } from '../agenda.js';
 import { openExpense, openTask, openMeeting, openNote, commonActions, payPayment } from '../forms.js';
 import { tile, agendaRow, sectionHead, empty, progress } from '../components.js';
+import { calcTargets, dayLog, totals, latestWeight, r0 } from '../nutrition.js';
 
 const isStandalone = () => navigator.standalone || matchMedia('(display-mode: standalone)').matches;
 
@@ -58,6 +59,8 @@ export function render() {
     ${tile('Встреч сегодня', String(meetToday.length), meetToday.length ? `${meetToday.filter((m) => m.done).length} прошло` : 'свободный график')}
   </div>
 
+  ${healthStrip(t)}
+
   <div class="card">
     ${sectionHead('Мой день', 'addTask', {}, '+ Дело')}
     ${items.length ? `<div class="list">${items.map(agendaRow).join('')}</div>` : empty('☕', 'На сегодня ничего не запланировано. Добавьте дело или встречу.')}
@@ -91,6 +94,7 @@ export function render() {
       pay: (d) => payPayment(d.id, d.ym),
       goPayments: () => (location.hash = '#/money/payments'),
       goProjects: () => (location.hash = '#/work/projects'),
+      goHealth: () => (location.hash = '#/health'),
       hideInstall: () => { db.settings.hideInstall = true; commit(); },
     },
   };
@@ -108,4 +112,20 @@ export function projectLine(p) {
     </div>
     ${p.deadline && p.deadline < t && p.status !== 'done' ? '<span class="badge danger">срок прошёл</span>' : '<span class="chev">›</span>'}
   </a>`;
+}
+
+function healthStrip(t) {
+  const h = db.health;
+  const target = calcTargets();
+  const eaten = totals(dayLog(t)).kcal;
+  const steps = h.steps[t];
+  const goal = Number(h.stepGoal) || 10000;
+  const w = latestWeight();
+  if (!target && !eaten && steps == null && !w) return '';
+  return `<a class="card" href="#/health">${sectionHead('Здоровье', 'goHealth', {}, 'подробнее ›')}
+    <div class="health-strip">
+      <div><b>${r0(eaten).toLocaleString('ru-RU')}</b><span>${target ? `из ${target.kcal.toLocaleString('ru-RU')} ккал` : 'ккал'}</span>${target ? progress(eaten, target.kcal, { over: eaten > target.kcal }) : ''}</div>
+      <div><b>${steps != null ? steps.toLocaleString('ru-RU') : '—'}</b><span>шагов</span>${steps != null ? progress(steps, goal) : ''}</div>
+      <div><b>${w ? String(w).replace('.', ',') : '—'}</b><span>кг</span></div>
+    </div></a>`;
 }

@@ -37,7 +37,7 @@ export function render() {
     <button class="btn ghost full" data-act="demo">Заполнить примером</button>
     <button class="btn ghost danger full" data-act="reset">Удалить все данные</button>
   </div>
-  <p class="muted small center">Планер Ильи · версия 3 · данные не покидают устройство</p>`;
+  <p class="muted small center">Планер Ильи · версия 4 · данные не покидают устройство</p>`;
 
   return {
     html,
