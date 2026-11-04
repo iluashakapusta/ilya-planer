@@ -10,9 +10,10 @@ import * as calendar from './views/calendar.js';
 import * as notes from './views/notes.js';
 import * as year from './views/year.js';
 import * as settings from './views/settings.js';
+import * as health from './views/health.js';
 
-const routes = { today, work, project, tasks, money, more, calendar, notes, year, settings };
-const TAB_OF = { today: 'today', work: 'work', project: 'work', tasks: 'tasks', money: 'money' };
+const routes = { today, work, project, tasks, money, health, more, calendar, notes, year, settings };
+const TAB_OF = { today: 'today', work: 'work', project: 'work', tasks: 'tasks', money: 'money', health: 'health' };
 
 const main = document.getElementById('main');
 let view = null;

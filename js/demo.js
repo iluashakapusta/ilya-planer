@@ -96,9 +96,37 @@ export function demoData() {
     version: 1,
     settings: { name: 'Илья', homeCity: 'Москва', theme: 'auto', budgets: { groceries: 25000, food: 15000, coffee: 3000, transport: 6000, clothes: 15000, fun: 8000 }, lastBackup: t, hideInstall: false },
     tasks, meetings, projects: [p1, p2, p3], expenses, payments,
+    health: demoHealth(t, d),
     notes: [
       { id: uid(), title: 'Идеи для сайта', text: 'Блок с отзывами клиентов\nКалькулятор стоимости\nЧат поддержки', pinned: true, updatedAt: now, createdAt: now },
       { id: uid(), title: 'Книги', text: 'Деньги, банки и кризисы\nПринципы — Рэй Далио\nАтлант расправил плечи', pinned: false, updatedAt: now, createdAt: now },
     ],
+  };
+}
+
+function demoHealth(t, d) {
+  const food = (name, brand, kcal, p, f, c, extra = {}) => ({ id: uid(), name, brand, kcal, p, f, c, uses: 3, lastUsed: new Date().toISOString(), ...extra });
+  const foods = [
+    food('Творог 5%', 'Простоквашино', 121, 17, 5, 1.8, { barcode: '4607001771647' }),
+    food('Овсяные хлопья', 'Геркулес', 352, 12.3, 6.2, 61.8),
+    food('Куриная грудка', '', 113, 23.6, 1.9, 0.4),
+    food('Рис басмати', '', 349, 7.5, 0.6, 77.7),
+    food('Яйцо куриное', '', 157, 12.7, 11.5, 0.7, { portion: 55 }),
+    food('Банан', '', 96, 1.5, 0.5, 21),
+    food('Протеин', 'Optimum Nutrition', 375, 75, 4.5, 9),
+  ];
+  const by = (n) => foods.find((f) => f.name === n);
+  const e = (n, grams, meal) => { const f = by(n); const k = grams / 100; return { id: uid(), foodId: f.id, name: f.name, grams, meal, kcal: f.kcal * k, p: f.p * k, f: f.f * k, c: f.c * k }; };
+  const weights = [], steps = {};
+  for (let i = 30; i >= 0; i -= 2) weights.push({ date: d(-i), weight: Math.round((84.6 - (30 - i) * 0.06 + (i % 4 ? 0.2 : -0.1)) * 10) / 10, fat: i % 6 ? null : Math.round((19.5 - (30 - i) * 0.03) * 10) / 10, source: 'health' });
+  for (let i = 13; i >= 0; i--) steps[d(-i)] = [7200, 11400, 9800, 6300, 12800, 10200, 8400, 13100, 9100, 5600, 10900, 11800, 7600, 6420][i];
+  return {
+    profile: { sex: 'm', age: 32, height: 182, weight: null, activity: '1.55', goal: 'lose', pct: 15, manual: false, kcal: null, p: null, f: null, c: null, fat: null },
+    foods,
+    log: {
+      [t]: [e('Овсяные хлопья', 70, 'breakfast'), e('Яйцо куриное', 110, 'breakfast'), e('Банан', 120, 'breakfast'), e('Куриная грудка', 200, 'lunch'), e('Рис басмати', 80, 'lunch')],
+      [d(-1)]: [e('Творог 5%', 200, 'breakfast'), e('Куриная грудка', 250, 'lunch'), e('Рис басмати', 90, 'lunch'), e('Протеин', 30, 'snack')],
+    },
+    weights, steps, stepGoal: 10000, lastSync: new Date().toISOString(),
   };
 }

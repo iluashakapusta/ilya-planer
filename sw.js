@@ -1,10 +1,11 @@
 // Офлайн-режим: сначала сеть (чтобы обновления приходили сразу), без сети — из кэша
-const CACHE = 'ilya-planner-v3';
+const CACHE = 'ilya-planner-v4';
 const SHELL = [
   './', 'index.html', 'css/styles.css', 'manifest.webmanifest', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',
-  'js/app.js', 'js/utils.js', 'js/const.js', 'js/store.js', 'js/ui.js', 'js/agenda.js', 'js/components.js', 'js/forms.js', 'js/demo.js', 'js/theme.js',
+  'js/app.js', 'js/utils.js', 'js/const.js', 'js/store.js', 'js/ui.js', 'js/agenda.js', 'js/components.js', 'js/forms.js', 'js/demo.js', 'js/theme.js', 'js/nutrition.js', 'js/scanner.js', 'js/bodyfat-ai.js',
   'js/views/today.js', 'js/views/work.js', 'js/views/project.js', 'js/views/tasks.js', 'js/views/money.js', 'js/views/more.js',
-  'js/views/calendar.js', 'js/views/notes.js', 'js/views/year.js', 'js/views/settings.js',
+  'js/views/calendar.js', 'js/views/notes.js', 'js/views/year.js', 'js/views/settings.js', 'js/views/health.js',
+  'js/vendor/barcode/ponyfill.js', 'js/vendor/barcode/zxing-exported.js', 'js/vendor/barcode/zxing_reader.wasm',
 ];
 
 self.addEventListener('install', (e) => {

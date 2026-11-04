@@ -3,9 +3,10 @@ import { esc } from './utils.js';
 
 let sheetEl = null;
 
-export function openSheet(html, mount) {
+export function openSheet(html, mount, onClose) {
   closeSheet(true);
   sheetEl = document.createElement('div');
+  sheetEl._onClose = onClose;
   sheetEl.className = 'sheet-wrap';
   sheetEl.innerHTML = `<div class="sheet-backdrop" data-close></div><div class="sheet" role="dialog" aria-modal="true"><div class="sheet-grip"></div>${html}</div>`;
   document.body.appendChild(sheetEl);
@@ -19,6 +20,7 @@ export function closeSheet(immediate) {
   if (!sheetEl) return;
   const el = sheetEl;
   sheetEl = null;
+  try { el._onClose?.(); } catch (e) { console.warn(e); }
   document.body.classList.remove('noscroll');
   if (immediate === true) { el.remove(); return; }
   el.classList.remove('open');

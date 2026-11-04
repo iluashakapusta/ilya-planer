@@ -7,12 +7,25 @@ function defaults() {
     version: 1,
     settings: { name: 'Илья', homeCity: 'Москва', theme: 'auto', budgets: {}, lastBackup: '', hideInstall: false },
     tasks: [], meetings: [], projects: [], expenses: [], payments: [], notes: [],
+    health: healthDefaults(),
+  };
+}
+
+function healthDefaults() {
+  return {
+    profile: { sex: 'm', age: null, height: null, weight: null, activity: '1.375', goal: 'keep', manual: false, kcal: null, p: null, f: null, c: null },
+    foods: [], log: {}, weights: [], steps: {}, stepGoal: 10000, lastSync: '',
   };
 }
 
 function merge(data) {
   const d = defaults();
-  return { ...d, ...data, settings: { ...d.settings, ...(data?.settings || {}) } };
+  const h = data?.health || {};
+  return {
+    ...d, ...data,
+    settings: { ...d.settings, ...(data?.settings || {}) },
+    health: { ...d.health, ...h, profile: { ...d.health.profile, ...(h.profile || {}) } },
+  };
 }
 
 function load() {
