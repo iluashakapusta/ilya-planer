@@ -11,8 +11,10 @@ import * as notes from './views/notes.js';
 import * as year from './views/year.js';
 import * as settings from './views/settings.js';
 import * as health from './views/health.js';
+import * as assistant from './views/assistant.js';
+import { pullHealth } from './sync.js';
 
-const routes = { today, work, project, tasks, money, health, more, calendar, notes, year, settings };
+const routes = { today, work, project, tasks, money, health, assistant, more, calendar, notes, year, settings };
 const TAB_OF = { today: 'today', work: 'work', project: 'work', tasks: 'tasks', money: 'money', health: 'health' };
 
 const main = document.getElementById('main');
@@ -36,6 +38,7 @@ function render(keepScroll = true) {
   view.mount?.(main);
   const tab = TAB_OF[name] || 'more';
   document.querySelectorAll('.tabbar a').forEach((a) => a.classList.toggle('on', a.dataset.tab === tab));
+  document.body.classList.toggle('in-chat', name === 'assistant');
   if (keepScroll) window.scrollTo(0, y);
 }
 
@@ -57,6 +60,11 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyThe
 // Обновлять «ближайшее» на главном экране
 setInterval(() => { if (current().name === 'today' && !sheetOpen() && document.visibilityState === 'visible') render(true); }, 60_000);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !sheetOpen()) render(true); });
+
+// Шаги и вес с сервера — при открытии и возвращении в приложение
+const pull = () => pullHealth().catch(() => {});
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') pull(); });
+setTimeout(pull, 800);
 
 applyTheme();
 render(false);

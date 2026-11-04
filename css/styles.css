@@ -421,3 +421,41 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .health-strip b { display: block; font-family: var(--display); font-weight: 500; font-size: 18px; color: var(--blue); letter-spacing: -.02em; }
 .health-strip span { font-size: 12px; color: var(--muted); }
 .health-strip .progress { height: 5px; margin: 6px 4px 0; }
+
+/* ===== Ассистент ===== */
+.fab { position: fixed; right: 16px; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 19; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; color: var(--cream); background: linear-gradient(135deg, var(--blue-2), var(--green-deep)); box-shadow: 0 8px 22px rgba(19, 41, 63, .3); }
+body.in-chat .fab, body.noscroll .fab { display: none; }
+.chat { display: flex; flex-direction: column; gap: 10px; padding-bottom: 150px; }
+.chat-hello { text-align: center; padding: 10px 4px; color: var(--muted); }
+.chat-hello p { margin: 10px auto 14px; max-width: 340px; font-size: 15px; }
+.chat-hello .chips { justify-content: center; }
+.chat-hello .chip { white-space: normal; text-align: left; flex: 1 1 auto; }
+.crest.dark { margin: 8px auto 0; color: var(--blue); border-color: var(--line); box-shadow: none; }
+.bubble { max-width: 88%; padding: 10px 14px; border-radius: 18px; font-size: 15.5px; line-height: 1.45; overflow-wrap: anywhere; }
+.bubble p { margin: 0 0 6px; } .bubble p:last-child { margin: 0; }
+.bubble ul { margin: 4px 0 6px; padding-left: 18px; }
+.bubble.me { align-self: flex-end; background: linear-gradient(135deg, var(--blue-2), var(--blue-deep)); color: #fff; border-bottom-right-radius: 6px; }
+.bubble.bot { align-self: flex-start; background: var(--card); border: 1px solid var(--line); border-bottom-left-radius: 6px; }
+.bubble.err { background: var(--danger-soft); border-color: transparent; }
+.chat-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chat-acts span { font-size: 12.5px; font-weight: 700; color: var(--ok); background: var(--ok-soft); padding: 3px 8px; border-radius: 999px; }
+.chat-acts.undone span { color: var(--muted); background: var(--field); text-decoration: line-through; }
+.chat-acts button { font-size: 12.5px; font-weight: 700; color: var(--blue); padding: 3px 8px; }
+.typing { display: flex; gap: 4px; padding: 14px; }
+.typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: blink 1.2s infinite; }
+.typing span:nth-child(2) { animation-delay: .2s; } .typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+.chat-input { position: fixed; left: 0; right: 0; bottom: calc(62px + env(safe-area-inset-bottom)); z-index: 18; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; max-width: 640px; margin: 0 auto; padding: 10px 12px; background: var(--tabbar); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-top: 1px solid var(--line); }
+.chat-input textarea { flex: 1; min-width: 0; resize: none; font: inherit; font-size: 16px; line-height: 1.35; padding: 10px 14px; border-radius: 20px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); outline: none; max-height: 140px; }
+.chat-input textarea:focus { border-color: var(--blue); }
+.chat-input .send { width: 42px; height: 42px; flex: none; border-radius: 50%; font-size: 20px; font-weight: 800; color: #fff; background: linear-gradient(135deg, var(--blue-2), var(--blue-deep)); }
+.chat-input .send:disabled { opacity: .4; }
+.chat-input .icon-btn { width: 42px; height: 42px; font-size: 18px; }
+.chat-photo { position: relative; width: 100%; }
+.chat-photo img { height: 64px; border-radius: 10px; }
+.chat-photo button { position: absolute; top: -6px; left: 54px; width: 22px; height: 22px; border-radius: 50%; background: var(--ink); color: var(--card); font-size: 12px; }
+:root[data-theme="dark"] .chat-input .send, :root[data-theme="dark"] .bubble.me { color: var(--on-accent); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chat-input .send, :root:not([data-theme="light"]) .bubble.me { color: var(--on-accent); } }
+.server-steps ol { padding-left: 20px; margin: 6px 0 10px; }
+.server-steps li { font-size: 14.5px; margin-bottom: 6px; }
+.server-steps code, .help code { background: var(--field); padding: 1px 5px; border-radius: 6px; font-size: 13px; overflow-wrap: anywhere; }
