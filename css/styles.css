@@ -459,3 +459,9 @@ body.in-chat .fab, body.noscroll .fab { display: none; }
 .server-steps ol { padding-left: 20px; margin: 6px 0 10px; }
 .server-steps li { font-size: 14.5px; margin-bottom: 6px; }
 .server-steps code, .help code { background: var(--field); padding: 1px 5px; border-radius: 6px; font-size: 13px; overflow-wrap: anywhere; }
+
+/* ===== Аниме на главном ===== */
+.anime-row { align-items: flex-start; }
+.anime-poster { width: 46px; height: 64px; flex: none; border-radius: 8px; background: var(--field) center / cover no-repeat; }
+.anime-row .progress { height: 5px; margin: 6px 0 0; }
+.anime-row .mini { align-self: center; }

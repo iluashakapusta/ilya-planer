@@ -5,6 +5,7 @@ import { uid, today, addDays, sum } from './utils.js';
 import { CATS, CAT, AREAS, MEET_TYPES } from './const.js';
 import { MEALS, calcTargets, latestWeight, latestFat, dayLog, totals, r0, r1, macrosFor } from './nutrition.js';
 import { paymentDate, isPaid } from './agenda.js';
+import { animeSummary } from './anime.js';
 
 const DATE = { type: 'string', description: 'Дата в формате ГГГГ-ММ-ДД' };
 const ok = (data) => ({ ok: true, ...data });
@@ -16,7 +17,7 @@ export const TOOLS = [
     input_schema: {
       type: 'object',
       properties: {
-        section: { type: 'string', enum: ['overview', 'tasks', 'meetings', 'projects', 'expenses', 'payments', 'nutrition', 'body', 'foods', 'notes'], description: 'overview — сводка на сегодня; nutrition — съеденное и норма КБЖУ; body — вес, % жира, шаги; foods — сохранённые продукты' },
+        section: { type: 'string', enum: ['overview', 'tasks', 'meetings', 'projects', 'expenses', 'payments', 'nutrition', 'body', 'foods', 'notes', 'anime'], description: 'overview — сводка на сегодня; nutrition — съеденное и норма КБЖУ; body — вес, % жира, шаги; foods — сохранённые продукты; anime — какие аниме смотрю и где остановился (только чтение)' },
         date_from: DATE,
         date_to: DATE,
       },
@@ -209,6 +210,10 @@ function readSection({ section, date_from, date_to }) {
     }
     case 'foods':
       return { foods: db.health.foods.map((f) => pick(f, ['id', 'name', 'brand', 'kcal', 'p', 'f', 'c', 'portion', 'uses'])) };
+    case 'anime': {
+      const a = animeSummary();
+      return a ? { updated: new Date(a.at).toISOString(), watching: a.items.map((x) => ({ title: x.title, where: x.line, state: x.state, watched: `${x.watched}/${x.total}`, new_episode: x.isNew })) } : { error: 'Раздел «Аниме» ещё не открывали или не вошли в AniLiberty' };
+    }
     case 'notes':
       return { notes: db.notes.map((n) => ({ id: n.id, title: n.title, text: String(n.text || '').slice(0, 500), pinned: !!n.pinned })) };
     default:

@@ -4,6 +4,7 @@ import { agendaFor, nextEvent, paymentsSoon } from '../agenda.js';
 import { openExpense, openTask, openMeeting, openNote, commonActions, payPayment } from '../forms.js';
 import { tile, agendaRow, sectionHead, empty, progress } from '../components.js';
 import { calcTargets, dayLog, totals, latestWeight, r0 } from '../nutrition.js';
+import { animeSummary } from '../anime.js';
 
 const isStandalone = () => navigator.standalone || matchMedia('(display-mode: standalone)').matches;
 
@@ -74,6 +75,8 @@ export function render() {
     <div class="row"><div class="row-icon">🗓</div><div class="row-main"><div class="row-title">${esc(p.title)}</div><div class="row-sub">${date < t ? `<span class="danger-text">${fmtShort(date)} · ${daysLeftText(date)}</span>` : `${fmtShort(date)} · ${daysLeftText(date)}`}</div></div>
     <div class="row-end"><b>${rub(p.amount)}</b><button class="mini" data-act="pay" data-id="${p.id}" data-ym="${ym}">Оплатил</button></div></div>`).join('')}</div></div>` : ''}
 
+  ${animeCard()}
+
   ${projects.length ? `<div class="card">${sectionHead('Проекты в работе', 'goProjects', {}, 'все ›')}<div class="list">${projects.map(projectLine).join('')}</div></div>` : ''}
 
   <div class="card">
@@ -128,4 +131,24 @@ function healthStrip(t) {
       <div><b>${steps != null ? steps.toLocaleString('ru-RU') : '—'}</b><span>шагов</span>${steps != null ? progress(steps, goal) : ''}</div>
       <div><b>${w ? String(w).replace('.', ',') : '—'}</b><span>кг</span></div>
     </div></a>`;
+}
+
+function animeCard() {
+  const a = animeSummary();
+  if (!a || !a.items.length) return '';
+  const safeUrl = (u) => (/^https:\/\//.test(u || '') ? u : '');
+  return `<div class="card">
+    <div class="section-head"><h3>Смотрю</h3><a class="link-btn" href="anime/">все ›</a></div>
+    <div class="list">${a.items.slice(0, 3).map((x) => `
+      <div class="row anime-row">
+        <a class="anime-poster" href="anime/" style="${safeUrl(x.poster) ? `background-image:url('${esc(safeUrl(x.poster))}')` : ''}"></a>
+        <a class="row-main" href="anime/">
+          <div class="row-title">${esc(x.title)}${x.isNew ? ' <span class="badge live">новая серия</span>' : ''}</div>
+          <div class="row-sub">${esc(x.line)}</div>
+          <div class="row-sub">${esc(x.state)}</div>
+          ${x.frac != null ? progress(x.frac, 1) : ''}
+        </a>
+        ${safeUrl(x.url) ? `<a class="mini" href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener" aria-label="Смотреть">▶</a>` : ''}
+      </div>`).join('')}</div>
+  </div>`;
 }
