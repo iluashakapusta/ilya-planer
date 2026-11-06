@@ -2,6 +2,7 @@ import { db } from '../store.js';
 import { today } from '../utils.js';
 import { pageHead } from '../components.js';
 import { paymentsSoon } from '../agenda.js';
+import { animeSummary } from '../anime.js';
 
 export function render() {
   const t = today();
@@ -14,8 +15,10 @@ export function render() {
     ['#/work/projects', '📁', 'Проекты', proj ? `${proj} в работе` : 'Задачи и дедлайны'],
     ['#/work/meetings', '🤝', 'Встречи', meets ? `${meets} впереди` : 'Созвоны и встречи'],
     ['#/money/payments', '₽', 'Платежи', pays ? `${pays} на этой неделе` : 'Аренда, подписки, связь'],
+    ['anime/', '▶', 'Аниме', (() => { const a = animeSummary(); const n = a?.items.filter((x) => x.isNew).length; return n ? `Новых серий: ${n}` : a?.items.length ? `Смотрю: ${a.items.length}` : 'Где остановился'; })()],
+    ['#/assistant', '✦', 'Ассистент', 'Спросить или записать'],
     ['#/notes', '✎', 'Заметки', notes ? `${notes} шт.` : 'Идеи и мысли'],
-    ['#/year', '✦', 'Итоги года', 'Цифры и статистика'],
+    ['#/year', '∑', 'Итоги года', 'Цифры и статистика'],
     ['#/settings', '⚙︎', 'Настройки', 'Профиль и резервная копия'],
   ];
   return {

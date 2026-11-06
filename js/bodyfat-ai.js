@@ -1,17 +1,10 @@
 // Оценка % жира по фото через Claude API.
-// Ключ хранится только на этом устройстве, отдельно от данных планера,
-// и не попадает в резервные копии. Фото уходит напрямую в Anthropic.
+// Запрос идёт через сервер планера (ключ на сервере) или напрямую с ключом из настроек.
+// Фото в планере не сохраняется.
 
-const KEY_STORAGE = 'ilya-planner-anthropic-key';
-const SDK_URL = './vendor/anthropic-sdk.js'; // @anthropic-ai/sdk 1.1.0, собран в один файл
-const MODEL = 'claude-opus-5-5';
+import { getClient, errorCode, MODEL, AI_ERRORS, getApiKey, setApiKey, aiReady } from './ai.js';
 
-export function getApiKey() {
-  try { return localStorage.getItem(KEY_STORAGE) || ''; } catch { return ''; }
-}
-export function setApiKey(v) {
-  try { v ? localStorage.setItem(KEY_STORAGE, v.trim()) : localStorage.removeItem(KEY_STORAGE); } catch { /* приватный режим */ }
-}
+export { AI_ERRORS, getApiKey, setApiKey, aiReady };
 
 /** Уменьшить фото до 1024 px по длинной стороне и вернуть base64 JPEG */
 export async function prepareImage(file) {
@@ -47,11 +40,7 @@ ${ctx}
 notes — 1–3 коротких предложения по-русски: на что опиралась оценка и что улучшить в фото. Это ориентир, а не медицинское измерение.`;
 
 export async function estimateBodyFat({ base64, sex, age, height, weight }) {
-  const apiKey = getApiKey();
-  if (!apiKey) throw new Error('nokey');
-  const { default: Anthropic } = await import(SDK_URL);
-  // Ключ принадлежит самому пользователю и хранится только на его телефоне
-  const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
+  const { Anthropic, client } = await getClient();
   const ctx = [sex === 'f' ? 'Пол: женский.' : 'Пол: мужской.', age ? `Возраст: ${age}.` : '', height ? `Рост: ${height} см.` : '', weight ? `Вес: ${weight} кг.` : ''].filter(Boolean).join(' ');
 
   let response;
@@ -71,12 +60,7 @@ export async function estimateBodyFat({ base64, sex, age, height, weight }) {
       }],
     });
   } catch (e) {
-    if (e instanceof Anthropic.AuthenticationError) throw new Error('badkey');
-    if (e instanceof Anthropic.PermissionDeniedError) throw new Error('badkey');
-    if (e instanceof Anthropic.RateLimitError) throw new Error('rate');
-    if (e instanceof Anthropic.APIConnectionError) throw new Error('net');
-    if (e instanceof Anthropic.APIError) throw new Error(e.status === 402 || /credit|billing/i.test(e.message) ? 'billing' : 'api');
-    throw e;
+    throw new Error(errorCode(e, Anthropic));
   }
 
   if (response.stop_reason === 'refusal') throw new Error('refusal');
@@ -92,14 +76,3 @@ export async function estimateBodyFat({ base64, sex, age, height, weight }) {
     notes: String(data.notes || ''),
   };
 }
-
-export const AI_ERRORS = {
-  nokey: 'Добавьте ключ Claude API в настройках оценки.',
-  badkey: 'Ключ не подошёл. Проверьте его в console.anthropic.com.',
-  billing: 'На счёте Claude API закончились средства.',
-  rate: 'Слишком много запросов. Попробуйте через минуту.',
-  net: 'Нет связи с сервером. Проверьте интернет.',
-  refusal: 'Модель отказалась оценивать это фото. Попробуйте другое.',
-  parse: 'Не удалось разобрать ответ. Попробуйте ещё раз.',
-  api: 'Ошибка Claude API. Попробуйте ещё раз.',
-};

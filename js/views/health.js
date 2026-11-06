@@ -8,6 +8,8 @@ import {
   defaultMeal, foodsByUse, lookupBarcode, parseHealthText, applyHealth, weightChange, navyFat,
 } from '../nutrition.js';
 import { getApiKey, setApiKey, prepareImage, estimateBodyFat, AI_ERRORS } from '../bodyfat-ai.js';
+import { hasServer, getServer, getToken } from '../ai.js';
+import { pullHealth } from '../sync.js';
 
 const SEGS = [['food', 'Питание'], ['weight', 'Вес'], ['steps', 'Шаги'], ['norm', 'Норма']];
 let day = today();
@@ -456,13 +458,13 @@ function fatPhotoSheet() {
       <p>Сфотографируйтесь по пояс, без футболки, анфас, при ровном свете, руки слегка в стороны. Claude оценит % жира, как тренер по фото-эталонам.</p>
       <p class="muted">Фото уменьшается и отправляется напрямую в Anthropic с вашим ключом. В планере оно не сохраняется. Это ориентир — точнее всего весы или обхваты.</p>
     </div>
-    <div class="field"><label for="ak">Ключ Claude API</label><input id="ak" type="password" autocomplete="off" placeholder="sk-ant-…" value="${hasKey ? '••••••••' : ''}" data-key>
-      <small>Хранится только на этом телефоне и не попадает в резервные копии. Получить: console.anthropic.com → API Keys.</small></div>
+    ${hasServer() ? '<p class="muted small">Запрос пойдёт через ваш сервер планера.</p>' : `<div class="field"><label for="ak">Ключ Claude API</label><input id="ak" type="password" autocomplete="off" placeholder="sk-ant-…" value="${hasKey ? '••••••••' : ''}" data-key>
+      <small>Хранится только на этом телефоне и не попадает в резервные копии. Удобнее — подключить сервер в настройках, тогда ключ не нужен на телефоне.</small></div>`}
     <img class="fat-preview" hidden alt="">
     <p class="fat-result" hidden></p>
     <label class="btn primary full file-btn">📷 Сделать или выбрать фото<input type="file" accept="image/*" capture="user" hidden data-photo></label>`,
   (panel) => {
-    const keyInput = panel.querySelector('[data-key]');
+    const keyInput = panel.querySelector('[data-key]') || { value: '', addEventListener() {} };
     keyInput.addEventListener('change', () => { if (keyInput.value && !keyInput.value.startsWith('•')) { setApiKey(keyInput.value); toast('Ключ сохранён'); } });
     panel.querySelector('[data-photo]').addEventListener('change', async (e) => {
       const file = e.target.files?.[0];
@@ -490,6 +492,16 @@ function fatPhotoSheet() {
 
 /* ---------- Синхронизация ---------- */
 async function syncFromHealth() {
+  if (hasServer()) {
+    toast('Обновляю с сервера…');
+    try {
+      const n = await pullHealth({ force: true });
+      const s = H().steps[today()];
+      toast(n ? `Обновлено${s != null ? ` · шаги: ${num(s)}` : ''} ✓` : 'Новых данных нет — запустите команду или дождитесь автоматизации');
+      rerender();
+    } catch { toast(H().syncError || 'Сервер недоступен'); }
+    return;
+  }
   let text = '';
   try { text = await navigator.clipboard.readText(); } catch { /* нет доступа — покажем поле */ }
   const data = parseHealthText(text);
@@ -518,22 +530,35 @@ function applySync(data) {
 function syncHelp() {
   openSheet(`<div class="sheet-head"><h2>Настройка</h2><button class="icon-btn" data-close>✕</button></div>
   <div class="help">
-    <h3>1. Весы Picooc → «Здоровье»</h3>
-    <p>В приложении Picooc: «Я» → «Настройки» → <b>Apple Health</b> → включить. После взвешивания вес и % жира появятся в «Здоровье».</p>
-    <h3>2. Команда «Планер: Здоровье»</h3>
-    <p>Откройте приложение <b>«Команды»</b> → «+» → назовите «Планер: Здоровье» и добавьте действия:</p>
+    ${hasServer() ? `<h3>Автоматически, через ваш сервер</h3>
+    <p>В команде «планер: здоровье» удалите «Текст» и «Скопировать в буфер обмена» и добавьте <b>«Получить содержимое URL»</b>:</p>
     <ol>
-      <li><b>Найти образцы здоровья</b>: тип «Шаги», дата начала — «Сегодня». Затем <b>Вычислить статистику</b>: «Сумма». Нажмите на результат → «Переименовать» → <i>Шаги</i>.</li>
-      <li><b>Найти образцы здоровья</b>: тип «Вес», сортировка по дате начала — «Сначала новые», ограничение — 1.</li>
-      <li><b>Найти образцы здоровья</b>: тип «Процент жира», сортировка — «Сначала новые», ограничение — 1.</li>
-      <li><b>Текст</b>, через «Выбрать переменную» вставьте результаты:<pre>шаги: [Шаги]
-вес: [Образцы здоровья (вес)]
-жир: [Образцы здоровья (жир)]</pre></li>
+      <li>URL: <code>${esc(getServer())}/health</code></li>
+      <li>Нажмите стрелку «>» в блоке: <b>Метод</b> — POST.</li>
+      <li><b>Заголовки</b> → «Добавить новый заголовок»: ключ <code>x-planner-token</code>, значение — <code>${esc(getToken())}</code></li>
+      <li><b>Текст запроса</b> — JSON → «Добавить новое поле» → <b>Число</b>: ключ <code>steps</code>, значение — плашка <b>«Сумма»</b>.</li>
+    </ol>
+    <button type="button" class="btn ghost full" data-copy="${esc(getServer())}/health">Скопировать URL</button>
+    <button type="button" class="btn ghost full" data-copy="${esc(getToken())}">Скопировать токен</button>
+    <p>Нажмите ▶ — внизу появится <code>{"ok":true…}</code>.</p>
+    <p><b>Чтобы запускалось само:</b> «Команды» → вкладка <b>«Автоматизация»</b> → «+» → <b>«Время суток»</b> → например 13:00, «Ежедневно» → <b>«Запускать сразу»</b> → «Далее» → выберите «планер: здоровье». Повторите для 18:00 и 23:30. Планер забирает свежие данные при каждом открытии.</p>
+    <h3>Вручную, через буфер обмена</h3>` : ''}
+    <h3>1. Команда «Планер: Здоровье»</h3>
+    <p>Откройте приложение <b>«Команды»</b> → «+» → назовите «Планер: Здоровье». Добавляйте действия через «Поиск действий» внизу:</p>
+    <ol>
+      <li><b>Найти данные Здоровья</b> (иконка сердечка; не «Записать»). Фильтры: «Тип» — <b>Шаги</b>, «Начало» — <b>сегодня</b>, «Добавить фильтр» → «Источник» — <b>Apple Watch</b> (или iPhone, если часов нет). Группирование, сортировка — «Нет», ограничение выключено.</li>
+      <li><b>Вычислить статистику</b> (серая иконка со столбиками; не калькулятор «±×÷»): «Вычислить <b>Сумма</b> от Данные Здоровья».</li>
+      <li><b>Текст</b>: напишите <code>шаги: </code> и над клавиатурой нажмите плашку <b>«Сумма»</b>.</li>
       <li><b>Скопировать в буфер обмена</b>.</li>
     </ol>
-    <p>При первом запуске разрешите команде доступ к «Здоровью».</p>
+    <p>Нажмите ▶ и разрешите доступ к шагам. Внизу появится «шаги: 5684» — сравните с «Здоровьем».</p>
+    <p class="muted small">Источник нужен, чтобы шаги с часов и телефона не сложились дважды. Выберите устройство, с которым число ближе к «Здоровью».</p>
+    <h3>2. Вес</h3>
+    <p>Если весы Picooc передают данные в «Здоровье» (проверьте: «Здоровье» → аватар → «Приложения» → PICOOC), добавьте в команду ещё одно «Найти данные Здоровья»: тип «Вес», сортировка «Начало», «Сначала недавние», ограничение 1 — и строку <code>вес: </code> с этим результатом в «Текст». Иначе записывайте вес вручную во вкладке «Вес».</p>
     <h3>3. Каждый день</h3>
     <p>Запустите команду (удобно добавить её на экран «Домой» или повесить на двойное касание задней крышки: «Настройки» → «Универсальный доступ» → «Касание» → «Касание задней панели»), откройте планер → «Здоровье» → <b>«⟳ Из «Здоровья»»</b> → «Вставить».</p>
     <p class="muted small">Планер понимает текст в любом порядке, с единицами («кг», «шаг.», «%») и запятыми. Если весы не мерят жир — строку «жир» можно не добавлять.</p>
-  </div>`);
+  </div>`, (panel) => panel.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => {
+    navigator.clipboard?.writeText(b.dataset.copy).then(() => toast('Скопировано')).catch(() => toast('Не получилось скопировать'));
+  })));
 }
